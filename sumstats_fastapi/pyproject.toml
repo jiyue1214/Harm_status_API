@@ -6,7 +6,7 @@ authors = ["jiyue1214 <jiyue1214@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.11,<3.13"
 fastapi = {extras = ["standard"], version = "^0.115.12"}
 uvicorn = {extras = ["standard"], version = "^0.34.0"}
 typer = "^0.15.2"
