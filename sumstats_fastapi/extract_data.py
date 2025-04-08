@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-class DaraExtractor:
+class DataExtractor:
     def __init__(self, db_path: str, table_name: str):
         if not db_path:
             raise ValueError("db_path cannot be null or empty")

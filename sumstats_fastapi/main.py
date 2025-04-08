@@ -13,9 +13,10 @@ from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 
 # Data Extraction
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from extract_data import DaraExtractor
+from extract_data import DataExtractor
 
 #------- Define the app the pagination---------------------------
+
 app = FastAPI()
 add_pagination(app)  # important! add pagination to your app
 T = TypeVar("T")
@@ -42,16 +43,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ------------API setting -----------------------------------------
+# ------------Read data -----------------------------------------
 # Serve static files (images)
-input_sql="/Users/yueji/Documents/GitHub/harmonisation_status_table/test_data/new_order_sumstats.db"
-extracted_data=DaraExtractor(db_path=input_sql,table_name="studies")
+LOCAL_DB_PATH = "./Data/Harm_sumstats_status.db"
+extracted_data=DataExtractor(db_path=LOCAL_DB_PATH,table_name="studies")
+# ------------API route -----------------------------------------
 @app.get("/", response_model=CustomPage[dict])
 def get_all_studies():
     data = extracted_data.extract_all()
     return paginate(data)
 # http://127.0.0.1:8000?page=1&size=100
-
 
 @app.get("/harmonised", response_model=CustomPage[dict])
 def get_harmonised_studies():
@@ -89,7 +90,7 @@ def get_harmonised_studies(pmid):
 
 #app.mount("/dashboard", WSGIMiddleware(dash_app.server))
 
-# Start the FastAPI server
+# ------------Start the FastAPI server -----------------------------------------
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", log_level="info")
