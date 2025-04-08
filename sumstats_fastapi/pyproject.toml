@@ -2,6 +2,7 @@
 name = "sumstats-fastapi"
 version = "0.1.0"
 description = ""
+packages = [{ include = "sumstats_fastapi" }]
 authors = ["jiyue1214 <jiyue1214@gmail.com>"]
 readme = "README.md"
 
