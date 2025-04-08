@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "sumstats-fastapi"
+version = "0.1.0"
+description = ""
+authors = ["jiyue1214 <jiyue1214@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["standard"], version = "^0.115.12"}
+uvicorn = "^0.34.0"
+typer = "^0.15.2"
+orjson = "^3.10.16"
+fastapi-pagination = "^0.12.34"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
