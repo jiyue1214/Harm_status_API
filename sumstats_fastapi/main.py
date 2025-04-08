@@ -63,7 +63,7 @@ def get_harmonised_studies():
 @app.get("/fail_harmonisation", response_model=CustomPage[dict])
 def get_failed_studies():
     # Get the filtered data on the fly by calling the extract_data function
-    query = "Raw_file_type != 'not_harm' AND 'Harm_status' != 'harmonised'"
+    query = "Raw_file_type != 'not_harm' AND Harm_status != 'harmonised'"
     data = extracted_data.extract_by_custom_query(query)
     return paginate(data)
 # http://127.0.0.1:8000/fail_harmonisation?page=1&size=100
@@ -71,8 +71,8 @@ def get_failed_studies():
 @app.get("/dropping_rate", response_model=CustomPage[dict])
 def get_drop_rate():
     # Get the filtered data on the fly by calling the extract_data function
-    query = "Harmonisation_drop_rate IS NOT NULL"
-    data = extracted_data.extract_columns(["Study","PMID","Harmonisation_drop_rate"],query)
+    query = "Harm_drop_rate != 'NA' "
+    data = extracted_data.extract_columns(["Study","PMID","Harm_drop_rate"],query)
     return paginate(data)
 
 @app.get("/GCST/{gcst_id}")
