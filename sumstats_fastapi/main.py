@@ -5,6 +5,7 @@ from typing import TypeVar
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 # Pagination
 from fastapi_pagination import Page, add_pagination, paginate
@@ -89,8 +90,6 @@ def get_harmonised_studies(pmid):
 #app.mount("/dashboard", WSGIMiddleware(dash_app.server))
 
 # Start the FastAPI server
-"""
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0")
-"""
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", log_level="info")
