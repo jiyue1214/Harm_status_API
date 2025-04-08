@@ -72,7 +72,7 @@ def get_failed_studies():
 def get_drop_rate():
     # Get the filtered data on the fly by calling the extract_data function
     query = "Harm_drop_rate != 'NA' "
-    data = extracted_data.extract_columns(["Study","PMID","Harm_drop_rate"],query)
+    data = extracted_data.extract_columns(["Study","PMID","Genotyping_type","Publication_date","Harm_drop_rate"],query)
     return paginate(data)
 
 @app.get("/GCST/{gcst_id}")
