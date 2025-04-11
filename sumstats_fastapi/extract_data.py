@@ -2,12 +2,7 @@ import os, sys
 import sqlite3
 from typing import Any, Callable, Dict, List
 from ftplib import FTP
-from io import BytesIO
-import tempfile
-import chardet
 import sqlite3
-import urllib.parse
-import re
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
