@@ -1,18 +1,38 @@
 import os, sys
 import sqlite3
 from typing import Any, Callable, Dict, List
+from ftplib import FTP
+from io import BytesIO
+import tempfile
+import chardet
+import sqlite3
+import urllib.parse
+import re
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 class DataExtractor:
-    def __init__(self, db_path: str, table_name: str):
-        if not db_path:
-            raise ValueError("db_path cannot be null or empty")
-        if not table_name:
-            raise ValueError("table_name cannot be null or empty")
+    def __init__(self, ftp_url: str, db_path: str = "temp.db", table_name: str = "studies"):
+        self.ftp_url = ftp_url
         self.db_path = db_path
         self.table_name = table_name
-    
+        self._download_db_file()
+
+    def _download_db_file(self):
+        stripped = self.ftp_url.replace("ftp://", "")
+        host, *path_parts = stripped.split("/")
+        file_path = "/" + "/".join(path_parts[:-1])
+        filename = path_parts[-1]
+
+        ftp = FTP(host)
+        ftp.login()
+        ftp.cwd(file_path)
+
+        with open(self.db_path, "wb") as f:
+            ftp.retrbinary(f"RETR {filename}", f.write)
+
+        ftp.quit()
+        
     def _execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
         """Helper method to execute a SQL query and return results as a list of dictionaries."""
         try:
@@ -81,10 +101,69 @@ class DataExtractor:
         all_data = self._execute_query(f"SELECT * FROM {self.table_name}")
         return [row for row in all_data if func(row[column_name])]
     
-    def extract_by_custom_query(self, where_clause: str) -> List[Dict[str, Any]]:
+    def is_number(self, value):
+        try:
+            float(value)
+            return True
+        except (ValueError, TypeError):
+            return False
+        
+    def build_where_clause(self, query_params):
+        """
+        Convert query parameters to a SQLite WHERE clause with values embedded.
+        
+        Parameters:
+        - query_params: Dict with field names and values
+        
+        Returns:
+        - where_clause string with values already incorporated
+        """
+        if not query_params:
+            return ""
+        
+        conditions = []
+        
+        
+        for key, value in query_params.items():
+            # Check if value contains a comparison operator
+            operators = [">", "<"]
+            has_operator = any(op in str(key) for op in operators)
+            
+            if has_operator and isinstance(key, str):
+                # Extract operator and actual value
+                for op in operators:
+                    if op in key:
+                        new_key = key.split(op)[0].strip()
+                        print("value:",value,",",len(value))
+                        if len(value) == 0:
+                            new_value = key.split(op)[1].strip()
+                        else:
+                            new_value = value
+
+                        conditions.append(f"{new_key} != 'NA'")
+                        # Handle string values with quotes
+                        if self.is_number(new_value.strip()):
+                            conditions.append(f"{new_key} {op} {new_value}")
+                        else:
+                            conditions.append(f"{new_key} {op} '{new_value}'")
+                        break
+            else:
+                # Default to equality comparison
+                if isinstance(value, str) and not self.is_number(value.strip()):
+                    conditions.append(f"{key} = '{value}'")
+                else:
+                    conditions.append(f"{key} = {value}")
+        
+        where_clause = " AND ".join(conditions)
+        return where_clause
+
+    
+    def extract_by_custom_query(self, conditions: dict) -> List[Dict[str, Any]]:
         """Extract rows using a raw SQL WHERE clause.
         e.g. query = "harmType_x != 'not_harm' AND exitcode > 1"
         """
+        where_clause = self.build_where_clause(conditions)
+        print(where_clause)
         query = f"SELECT * FROM {self.table_name} WHERE {where_clause}"
         return self._execute_query(query,())
     
