@@ -39,8 +39,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -67,7 +66,7 @@ def get_query(request: Request):
 def get_all_studies():
     data = extracted_data.extract_all()
     return paginate(data)
-# http://127.0.0.1:8000?page=1&size=100
+# http://127.0.0.1:8000/all_studies?page=1&size=100
 
 @app.get("/harmonised", response_model=CustomPage[dict])
 def get_harmonised_studies():
@@ -102,6 +101,8 @@ def get_harmonised_studies(pmid):
     # e.g. 33983923
     data = extracted_data.extract_by_column("PMID",pmid)
     return JSONResponse(content=data)
+
+# ----------Plotly Data----------------------------------
 
 @app.get("/plotly/status_bar")
 def get_harm_status():
