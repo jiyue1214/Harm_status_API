@@ -2,7 +2,7 @@
 import os, sys
 # Fast API
 from typing import TypeVar
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, Depends
 from ftplib import FTP
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +10,7 @@ import uvicorn
 
 
 # Pagination
-from fastapi_pagination import Page, add_pagination, paginate
+from fastapi_pagination import Page, add_pagination, paginate, Params
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 
 # Data Extraction
@@ -51,16 +51,23 @@ extracted_data=DataExtractor(ftp_url=ftp_url,table_name="studies")
 
 # ------------API route -----------------------------------------
 @app.get("/query", response_model=CustomPage[dict])
-def get_query(request: Request):
+def get_query(request: Request, params: Params = Depends()):
     """
     Accepts dynamic query conditions, for example:
-    /query?Harm_drop_rate>0.8&Harm_status=harmonised
+    /query?Harm_drop_rate>0.8&Harm_status=harmonised&page=2
     """
     # Get all query parameters
     query_params = dict(request.query_params)
+
+    # Remove pagination keys
+    query_params.pop("page", None)
+    query_params.pop("size", None)
+    query_params.pop("limit", None)
+    query_params.pop("offset", None)
+
     print(query_params)
     data = extracted_data.extract_by_custom_query(query_params)
-    return paginate(data)
+    return paginate(data, params)
 
 @app.get("/all_studies", response_model=CustomPage[dict])
 def get_all_studies():
@@ -103,7 +110,6 @@ def get_harmonised_studies(pmid):
     return JSONResponse(content=data)
 
 # ----------Plotly Data----------------------------------
-
 @app.get("/plotly/status_bar")
 def get_harm_status():
     query="""
