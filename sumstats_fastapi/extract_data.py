@@ -50,54 +50,42 @@ class DataExtractor:
         except (ValueError, TypeError):
             return False
         
-    def build_where_clause(self, query_params):
+    def build_where_clause(self,filter_str):
         """
-        Convert query parameters to a SQLite WHERE clause with values embedded.
-        
-        Parameters:
-        - query_params: Dict with field names and values
-        
+        Takes a raw string like:
+            "Harm_drop_rate!=0.8&Another_field>=5&Description~rare"
         Returns:
-        - where_clause string with values already incorporated
+            SQL-safe WHERE clause
         """
-        if not query_params:
+        if not filter_str:
             return ""
-        
+    
+        filters_str = filter_str.strip('"')
         conditions = []
-        
-        
-        for key, value in query_params.items():
-            # Check if value contains a comparison operator
-            operators = [">", "<"]
-            has_operator = any(op in str(key) for op in operators)
-            
-            if has_operator and isinstance(key, str):
-                # Extract operator and actual value
-                for op in operators:
-                    if op in key:
-                        new_key = key.split(op)[0].strip()
-                        print("value:",value,",",len(value))
-                        if len(value) == 0:
-                            new_value = key.split(op)[1].strip()
-                        else:
-                            new_value = value
+        valid_ops = ["!=", ">=", "<=", "=", ">", "<", "~"]
+    
+        filter_parts = filters_str.split(";")
 
-                        conditions.append(f"{new_key} != 'NA'")
-                        # Handle string values with quotes
-                        if self.is_number(new_value.strip()):
-                            conditions.append(f"{new_key} {op} {new_value}")
-                        else:
-                            conditions.append(f"{new_key} {op} '{new_value}'")
-                        break
-            else:
-                # Default to equality comparison
-                if isinstance(value, str) and not self.is_number(value.strip()):
-                    conditions.append(f"{key} = '{value}'")
-                else:
-                    conditions.append(f"{key} = {value}")
-        
-        where_clause = " AND ".join(conditions)
-        return where_clause
+        for expr in filter_parts:
+            expr = expr.strip()
+            for op in valid_ops:
+                if op in expr:
+                    field, value = expr.split(op, 1)
+                    field, value = field.strip(), value.strip()
+    
+                    if op in [">=", "<=", ">", "<"]:
+                        conditions.append(f"{field} != 'NA'")
+                    
+                    if op == "~":
+                        conditions.append(f"{field} LIKE '%{value}%'")
+                    elif self.is_number(value):
+                        conditions.append(f"{field} {op} {value}")
+                    else:
+                        conditions.append(f"{field} {op} '{value}'")
+                    break
+    
+        return " AND ".join(conditions)
+
 
 # --------------------------- Core Query Methods ---------------------------
 

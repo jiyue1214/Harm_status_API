@@ -54,18 +54,10 @@ extracted_data=DataExtractor(ftp_url=ftp_url,table_name="studies")
 def get_query(request: Request, params: Params = Depends()):
     """
     Accepts dynamic query conditions, for example:
-    /query?Harm_drop_rate>0.8&Harm_status=harmonised&page=2
+    http://127.0.0.1:8000/query?page=1&size=5&filter=%22Harm_drop_rate!=0.8;First_author~Yu%22
     """
     # Get all query parameters
-    query_params = dict(request.query_params)
-
-    # Remove pagination keys
-    query_params.pop("page", None)
-    query_params.pop("size", None)
-    query_params.pop("limit", None)
-    query_params.pop("offset", None)
-
-    print(query_params)
+    query_params = request.query_params["filter"] 
     data = extracted_data.extract_by_custom_query(query_params)
     return paginate(data, params)
 
