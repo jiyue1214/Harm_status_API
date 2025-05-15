@@ -1,0 +1,14 @@
+name: Daily Render Deploy
+
+on:
+  schedule:
+    - cron: "0 16 05 * *"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST https://api.render.com/deploy/srv-cvqm8iuuk2gs73cjooqg?key=BeTaVtSXcMo
