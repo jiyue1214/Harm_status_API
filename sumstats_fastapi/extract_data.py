@@ -17,11 +17,34 @@ class DataExtractor:
 
  # --------------------------- FTP Handling ---------------------------
     def ensure_local_copy(self):
-        if not os.path.exists(self.db_path):
-            print(f"[INFO] DB file not found locally. Downloading from FTP...")
+        if not self._ftp_file_is_up_to_date():
+            print(f"[INFO] Downloading updated DB file from FTP...")
             self._download_db_file()
         else:
-            print(f"[INFO] Using cached DB file at {self.db_path}")
+            print(f"[INFO] Using up-to-date cached DB file")
+    
+    def _ftp_file_is_up_to_date(self):
+        try:
+            stripped = self.ftp_url.replace("ftp://", "")
+            host, *path_parts = stripped.split("/")
+            file_path = "/" + "/".join(path_parts[:-1])
+            filename = path_parts[-1]
+            
+            ftp = FTP(host, timeout=30)
+            ftp.login()
+            ftp.cwd(file_path)
+            
+            remote_timestamp = ftp.sendcmd(f"MDTM {filename}")[4:].strip()
+            remote_time = datetime.strptime(remote_timestamp, "%Y%m%d%H%M%S")
+            ftp.quit()
+            
+            if os.path.exists(self.db_path):
+                local_time = datetime.utcfromtimestamp(os.path.getmtime(self.db_path))
+                return local_time >= remote_time
+            return False
+        except Exception as e:
+            print(f"[WARN] Could not check FTP file timestamp: {e}")
+            return False  # Fallback: redownload if check fails
 
     def _download_db_file(self):
         try:
