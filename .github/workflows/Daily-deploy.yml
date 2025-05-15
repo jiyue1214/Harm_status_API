@@ -1,8 +1,8 @@
 name: Daily Render Deploy
 
 on:
-  schedule:
-    - cron: "0 16 * * *"
+#  schedule:
+#    - cron: "0 16 * * *"
   workflow_dispatch:
 
 jobs:
